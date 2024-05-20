@@ -1,0 +1,75 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEditor.Tilemaps;
+using UnityEngine;
+
+public class kod : MonoBehaviour
+{
+
+    public float speed;
+    float moveInput;
+    Rigidbody2D rb;
+    bool facingRight = true;
+    private bool isGrounded;
+    public Transform groundCheck;
+    public LayerMask whatIsGround;
+    public float checkRadius;
+    private int extraJump;
+    public int extraJumpsValue;
+    public float jumpForce;
+    Animator playerAnimator;
+
+    void Start()
+    {
+        rb = GetComponent<Rigidbody2D>();
+        playerAnimator = GetComponent<Animator>();
+    }
+
+    void FixedUpdate()
+    {
+        isGrounded = Physics2D.OverlapCircle(groundCheck.position, checkRadius, whatIsGround);
+
+        moveInput = Input.GetAxisRaw("Horizontal");
+        playerAnimator.SetFloat("Speed", Mathf.Abs(moveInput));
+
+        rb.velocity = new Vector2(moveInput * speed, rb.velocity.y);
+
+        if (facingRight && moveInput < 0)
+        {
+            Flip();
+        }
+        else if (!facingRight && moveInput > 0)
+        {
+            Flip();
+        }
+    }
+
+    void Update()
+    {
+        if (isGrounded)
+        {
+            extraJump = extraJumpsValue; // Yerdeyken ek zıplamaları sıfırla
+            playerAnimator.SetBool("jump", false);
+        }
+
+        if (Input.GetKeyDown(KeyCode.Space) && (isGrounded || extraJump > 0))
+        {
+            rb.velocity = Vector2.up * jumpForce;
+            extraJump--;
+            playerAnimator.SetBool("jump", true);
+        }
+
+        if (Mathf.Approximately(rb.velocity.y, 0) && playerAnimator.GetBool("jump"))
+        {
+            playerAnimator.SetBool("jump", false);
+        }
+    }
+
+    void Flip()
+    {
+        facingRight = !facingRight;
+        Vector3 scale = transform.localScale;
+        scale.x *= -1;
+        transform.localScale = scale;
+    }
+}
